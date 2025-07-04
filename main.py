@@ -93,7 +93,7 @@ def handle_start(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"Произошла ошибка: {e}")
 
-# 🔁 Включаем polling
 if __name__ == '__main__':
+    bot.remove_webhook()  # 🔥 Удаляет старый webhook
     print("🤖 Бот запущен (polling)...")
     bot.infinity_polling()
