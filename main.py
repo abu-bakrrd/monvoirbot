@@ -1,11 +1,11 @@
+import os
 import telebot
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import os
 
 TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
-ADMIN_CHAT_ID = 5644397480
+ADMIN_CHAT_ID = 5644397480  # Замени на свой ID
 
 @bot.message_handler(commands=['about'])
 def about_handler(message):
@@ -43,9 +43,6 @@ def forward_to_admin(message):
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     args = message.text.split()
-    print(f"[DEBUG] message.text = {message.text}")
-    print(f"[DEBUG] args = {args}")
-
     if len(args) != 2:
         WELCOME_TEXT = """
 👋 <b>Добро пожаловать в MONVOIR!</b>
@@ -65,17 +62,16 @@ def handle_start(message):
 """
         bot.send_message(message.chat.id, WELCOME_TEXT, parse_mode="HTML")
         return
+
     msg = bot.send_message(message.chat.id, '<i>Проверяем подлинность...</i>', parse_mode="HTML")
-    scope = ["https://spreadsheets.google.com/feeds",
-             "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
-        'monvoir-8bb20faac9b5.json', scope)
+
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name('monvoir-8bb20faac9b5.json', scope)
     client = gspread.authorize(creds)
     spreadsheet = client.open("Monvoir orders")
     sheet = spreadsheet.get_worksheet(2)
 
     param = args[1]
-
     if not param.startswith("order_"):
         bot.send_message(message.chat.id, "⚠ Неверный формат кода.")
         return
@@ -97,5 +93,7 @@ def handle_start(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"Произошла ошибка: {e}")
 
+# 🔁 Включаем polling
 if __name__ == '__main__':
-    bot.polling(none_stop=True)
+    print("🤖 Бот запущен (polling)...")
+    bot.infinity_polling()
