@@ -2,11 +2,15 @@ import os
 import telebot
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from flask import Flask, request
 
+# Инициализация
 TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
 ADMIN_CHAT_ID = 5644397480  # Замени на свой ID
 
+# Команды
 @bot.message_handler(commands=['about'])
 def about_handler(message):
     about_text = """
@@ -26,6 +30,7 @@ def about_handler(message):
 """
     bot.send_message(message.chat.id, about_text, parse_mode='HTML')
 
+
 @bot.message_handler(commands=['support'])
 def support_command(message):
     bot.send_message(
@@ -34,11 +39,13 @@ def support_command(message):
     )
     bot.register_next_step_handler(message, forward_to_admin)
 
+
 def forward_to_admin(message):
     user = message.from_user
     text = f"📩 Новое сообщение от @{user.username or 'без username'} (ID: {user.id}):\n\n{message.text}"
     bot.send_message(ADMIN_CHAT_ID, text)
     bot.send_message(message.chat.id, "✅ Спасибо! Ваше сообщение отправлено в поддержку.")
+
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
@@ -93,7 +100,24 @@ def handle_start(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"Произошла ошибка: {e}")
 
-if __name__ == '__main__':
-    bot.remove_webhook()  # 🔥 Удаляет старый webhook
-    print("🤖 Бот запущен (polling)...")
-    bot.infinity_polling()
+
+# Webhook маршрут
+@app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+    update = telebot.types.Update.de_json(request.get_data().decode("utf-8"))
+    bot.process_new_updates([update])
+    return "ok", 200
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return "MONVOIR Bot is running", 200
+
+
+if __name__ == "__main__":
+    # Удалить старый Webhook и установить новый
+    bot.remove_webhook()
+    bot.set_webhook(url=f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}/{TOKEN}")
+
+    # Запуск Flask-приложения
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
