@@ -1,7 +1,5 @@
 import os
 import telebot
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask, request
 
 # Инициализация
@@ -49,9 +47,7 @@ def forward_to_admin(message):
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    args = message.text.split()
-    if len(args) != 2:
-        WELCOME_TEXT = """
+    WELCOME_TEXT = """
 👋 <b>Добро пожаловать в MONVOIR!</b>
 
 🖤 Здесь ты найдёшь стильную одежду и актуальные новинки.
@@ -67,57 +63,9 @@ def handle_start(message):
 
 <i>Будь в стиле, будь с MONVOIR.</i>    
 """
-        bot.send_message(message.chat.id, WELCOME_TEXT, parse_mode="HTML")
-        return
-
-    msg = bot.send_message(message.chat.id, '<i>Проверяем подлинность...</i>', parse_mode="HTML")
-
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name('monvoir-8bb20faac9b5.json', scope)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open("Monvoir orders")
-    sheet = spreadsheet.get_worksheet(2)
-
-    param = args[1]
-    if not param.startswith("order_"):
-        bot.send_message(message.chat.id, "⚠ Неверный формат кода.")
-        return
-
-    unique_code = param.replace("order_", "").strip()
-
-    try:
-        records = sheet.get_all_records()
-        for i, row in enumerate(records, start=2):
-            if str(row['uniquie_code']).strip() == unique_code:
-                if str(row['yes/no']).strip().lower() == "yes":
-                    bot.send_message(message.chat.id, "⚠ Этот код уже был использован.")
-                else:
-                    sheet.update_cell(i, 3, str(message.from_user.id))
-                    sheet.update_cell(i, 4, "yes")
-                    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id, text="✅ Код подтверждён. Спасибо за покупку!")
-                return
-        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id, text="❌Такой код не найден.")
-    except Exception as e:
-        bot.send_message(message.chat.id, f"Произошла ошибка: {e}")
+    bot.send_message(message.chat.id, WELCOME_TEXT, parse_mode="HTML")
 
 
-# Webhook маршрут
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    update = telebot.types.Update.de_json(request.get_data().decode("utf-8"))
-    bot.process_new_updates([update])
-    return "ok", 200
 
 
-@app.route("/", methods=["GET"])
-def index():
-    return "MONVOIR Bot is running", 200
 
-
-if __name__ == "__main__":
-    # Удалить старый Webhook и установить новый
-    bot.remove_webhook()
-    bot.set_webhook(url=f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}/{TOKEN}")
-
-    # Запуск Flask-приложения
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
