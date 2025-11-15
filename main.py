@@ -66,6 +66,7 @@ def run_bot():
     while True:
         try:
             print("Запускаю бота...")
+            bot.remove_webhook()
             bot.polling(none_stop=True)
         except Exception as e:
             print(f"Ошибка: {e}")
