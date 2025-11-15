@@ -1,6 +1,4 @@
-import os
 import telebot
-from flask import Flask, request
 
 # Инициализация
 TOKEN = '7751530491:AAGmzfztRlNOUJ5CPMvkDMSmBSj6a3Xph_U'
