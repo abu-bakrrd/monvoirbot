@@ -63,7 +63,17 @@ def handle_start(message):
 """
     bot.send_message(message.chat.id, WELCOME_TEXT, parse_mode="HTML")
 
+def run_bot():
+    while True:
+        try:
+            print("Запускаю бота...")
+            bot.polling(none_stop=True)
+        except Exception as e:
+            print(f"Ошибка: {e}")
+            print("Перезапуск через 5 секунд...")
+            time.sleep(5)
 
-
+if __name__ == '__main__':
+    run_bot()
 
 
