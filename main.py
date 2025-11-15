@@ -1,4 +1,5 @@
 import telebot
+import time
 
 # Инициализация
 TOKEN = '7751530491:AAGmzfztRlNOUJ5CPMvkDMSmBSj6a3Xph_U'
