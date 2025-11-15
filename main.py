@@ -3,11 +3,9 @@ import telebot
 from flask import Flask, request
 
 # Инициализация
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = '7751530491:AAGmzfztRlNOUJ5CPMvkDMSmBSj6a3Xph_U'
 bot = telebot.TeleBot(TOKEN)
-app = Flask(__name__)
 ADMIN_CHAT_ID = 5644397480  # Замени на свой ID
-
 # Команды
 @bot.message_handler(commands=['about'])
 def about_handler(message):
